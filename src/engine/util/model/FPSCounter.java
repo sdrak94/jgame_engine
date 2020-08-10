@@ -1,6 +1,6 @@
 package engine.util.model;
 
-public class FPSCounter
+public class FPSCounter implements IFPSCounter
 {
 	private int FPS = 0;
 	private int frames = 0;
@@ -8,6 +8,7 @@ public class FPSCounter
 	private long curTime = System.currentTimeMillis();
 	private long lastTime = curTime;
 	
+	@Override
 	public int getFPS()
 	{
 		lastTime = curTime;

@@ -1,4 +1,4 @@
-package engine.model.engine.animation;
+package engine.model.animation;
 
 import java.util.HashSet;
 

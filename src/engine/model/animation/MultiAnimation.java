@@ -1,4 +1,4 @@
-package engine.model.engine.animation;
+package engine.model.animation;
 
 import engine.model.TileGroup;
 import engine.model.enums.Heading;

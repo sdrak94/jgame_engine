@@ -1,24 +1,56 @@
 package engine.model.interfaces;
 
-import java.awt.Point;
-
 public interface ILocationable
 {
-	public void setLocation(int x, int y);
-	public void setX(int x);
-	public void setY(int y);
-	public void setZ(int z);
+	public void setLocationX(int x);
+	public void setLocationY(int y);
+	public void setLocationZ(int z);
 	
-	public int getX();
-	public int getY();
-	public int getZ();
+	public int getLocationX();
+	public int getLocationY();
+	public int getLocationZ();
 	
-	public default Point getLocation(Point p)
+
+	public default void setLocation(int x, int y)
 	{
-		if (p == null)
-			return new Point(getX(), getY());
-		p.setLocation(getX(), getY());
-		return p;
+		setLocationX(x);
+		setLocationY(y);
 	}
 	
+	public default void setLocation(int x, int y, int z)
+	{
+		setLocationX(x);
+		setLocationY(y);
+		setLocationZ(z);
+	}
+
+	public default void incX(int x)
+	{
+		setLocationX(getLocationX() + x);
+	}
+	
+	public default void incY(int y)
+	{
+		setLocationY(getLocationY() + y);
+	}
+	
+	public default void incZ(int z)
+	{
+		setLocationZ(getLocationZ() + z);
+	}
+
+	public default void decX(int x)
+	{
+		setLocationX(getLocationX() - x);
+	}
+	
+	public default void decY(int y)
+	{
+		setLocationY(getLocationY() - y);
+	}
+	
+	public default void decZ(int z)
+	{
+		setLocationZ(getLocationZ() - z);
+	}
 }

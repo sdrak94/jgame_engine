@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import engine.io.out.graphics.render.RenderableItem;
 import engine.manager.DelayManager;
+import engine.model.interfaces.IRenderable;
 
 public class RenderQueue extends LinkedList<RenderableItem>
 {
@@ -19,7 +20,7 @@ public class RenderQueue extends LinkedList<RenderableItem>
 			add(renderable);
 	}
 	
-	public void rmRenderQueue(RenderableItem renderable)
+	public void rmRenderQueue(IRenderable renderable)
 	{
 		remove(renderable);
 	}

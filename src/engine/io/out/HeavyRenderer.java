@@ -1,20 +1,21 @@
 package engine.io.out;
 
 import java.awt.Canvas;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import engine.io.out.graphics.render.RenderableItem;
 import engine.model.enums.ItemState;
+import engine.model.event.enums.EventType;
+import engine.model.interfaces.IRenderable;
 
 public class HeavyRenderer extends Renderer
 {
@@ -45,12 +46,12 @@ public class HeavyRenderer extends Renderer
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				final int rot = -e.getWheelRotation();
 				if (knownItem == null)
-					incZ(rot);//viewZ += rot;
+					incRenderZ(rot);//viewZ += rot;
 				else
 				{
-					knownItem.setZ(knownItem.getZ() + rot);
+					knownItem.setLocationZ(knownItem.getLocationZ() + rot);
 					//viewZ = knownItem.getZ();
-					setZ(knownItem.getZ());
+					setRenderZ(knownItem.getLocationZ());
 					/*synchronized (renderables)
 					{
 						
@@ -66,21 +67,38 @@ public class HeavyRenderer extends Renderer
 	{
 		int maxZ = -Integer.MAX_VALUE;
 		for (RenderableItem renderable : renderQueue)
-			if (maxZ < renderable.getZ()) maxZ = renderable.getZ();
+			if (maxZ < renderable.getLocationZ()) maxZ = renderable.getLocationZ();
 		return maxZ;
 	}
 	
-	private RenderableItem getTop(int x, int y)
+	
+	private RenderableItem getTop(int x, int y, boolean calcOffset, boolean sealedOnly)
 	{
-		x += _renderRect.x;
-		y += _renderRect.y;
+		if (calcOffset)
+		{
+			x += _renderRect.getLocationX();
+			y += _renderRect.getLocationY();
+		}
 		
 		RenderableItem top = null;
 		for (RenderableItem renderable : renderQueue)
 		{
-			if (renderable.isClickable() && renderable.getZ() <= getZ() && renderable.contains(x, y))
-				top = renderable;
+			if (sealedOnly && !renderable.getItemState(ItemState.SEALED))
+				continue;
+			
+			if (renderable.getItemState(ItemState.CLICKABLE) && renderable.getLocationZ() <= getRenderZ() && renderable.contains(x, y))
+			{
+				if (top == null)
+					top = renderable;
+				else if (top.getLocationZ() < renderable.getLocationZ())
+					top = renderable;
+			}
+				
 		}
+		
+		if (top == null && calcOffset == false)
+			return getTop(x, y, true, false);
+		
 		return top;
 	}
 	
@@ -88,8 +106,9 @@ public class HeavyRenderer extends Renderer
 	protected void renderInit()
 	{
 		final Graphics2D g = (Graphics2D) fetchBufferStrategy().getDrawGraphics();
+
 		if (_clearGraphics == null )
-			_clearGraphics = g.getTransform();
+			_clearGraphics = new AffineTransform(g.getTransform());
 		renderStart(g);
 		render(g);
 		renderEnd(g);
@@ -111,7 +130,7 @@ public class HeavyRenderer extends Renderer
 			.sorted()
 			.forEachOrdered((renderableItem) ->
 			{
-				renderableItem.renderInit(g, _renderRect.x, _renderRect.y);
+				renderableItem.renderInit(g, _renderRect.getLocationX(), _renderRect.getLocationY());
 				clearGraphics(g);
 			});
 //		synchronized (renderQueue)
@@ -144,11 +163,11 @@ public class HeavyRenderer extends Renderer
 	public void addRenderQueue(RenderableItem renderable)
 	{
 		if (!renderQueue.contains(renderable) && renderQueue.add(renderable))
-			setZ(getZ() < renderable.getZ() ? renderable.getZ() : getZ());
+			setRenderZ(getRenderZ() < renderable.getLocationZ() ? renderable.getLocationZ() : getRenderZ());
 	}
 	
 	@Override
-	public void rmRenderQueue(RenderableItem renderable)
+	public void rmRenderQueue(IRenderable renderable)
 	{	
 		renderQueue.remove(renderable);
 	}
@@ -167,7 +186,7 @@ public class HeavyRenderer extends Renderer
 	
 	public class EngineMouse extends MouseAdapter
 	{
-		private RenderableItem hover;
+		private IRenderable hover;
 		private int x, y, dx, dy;
 		
 		@Override
@@ -175,16 +194,20 @@ public class HeavyRenderer extends Renderer
 		{
 			if (e.getButton() == 1)
 			{
-				final RenderableItem newItem = getTop(e.getX(), e.getY());
-				System.out.println(newItem);
+				final RenderableItem newItem = getTop(e.getX(), e.getY(), false, true);
+//				System.out.println(newItem);
 				if (newItem == null)
 				{
 					if (knownItem != null)
+					{
+
 						knownItem.setItemState(ItemState.CLICKED, false);
+					}
 				}
 				else
 				{
 					newItem.setItemState(ItemState.CLICKED, true);
+					newItem.handleEvent(EventType.EVT_MOUSE__ITEM_SELECTED, e);
 					if (knownItem != newItem && knownItem != null)
 						knownItem.setItemState(ItemState.CLICKED, false);
 				}
@@ -195,19 +218,19 @@ public class HeavyRenderer extends Renderer
 			}
 			if (e.getButton() == 2)
 //				viewZ = renderQueue.isEmpty() ? 0 : getMaxZ();
-				setZ(renderQueue.isEmpty() ? 0 : getMaxZ());
+				setRenderZ(renderQueue.isEmpty() ? 0 : getMaxZ());
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e)
 		{
-			if (knownItem != null)
+			if (knownItem != null && knownItem.getItemState(ItemState.MOVEABLE))
 			{
 				dx = e.getX() - x;
 				dy = e.getY() - y;
 				x = e.getX();
 				y = e.getY();
-				knownItem.setLocation(knownItem.getX() + dx, knownItem.getY() + dy);
+				knownItem.setLocation(knownItem.getLocationX() + dx, knownItem.getLocationY() + dy);
 			}
 			else
 			{
@@ -215,21 +238,29 @@ public class HeavyRenderer extends Renderer
 				dy = e.getY() - y;
 				x = e.getX();
 				y = e.getY();
-				incOffsetX((int) (-dx));
-				incOffsetY((int) (-dy));
+				incRenderX((int) (-dx));
+				incRenderY((int) (-dy));
 			}
 		}
 		
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
-			final RenderableItem item = getTop(e.getX(), e.getY());
-			if (hover != null && hover != item)
-				hover.setItemState(ItemState.IDLE, true);
-			if (item != null)
+			final IRenderable item = getTop(e.getX(), e.getY(), false, true);
+			if (hover != null)
 			{
-				item.setItemState(ItemState.HOVER, false);
+				if (hover == item)
+					hover.handleEvent(EventType.EVT_MOUSE__ITEM_HOVERED, e);
+				else
+				{
+					hover.handleEvent(EventType.EVT_MOUSE__ITEM_HOVERED_END, e);
+					hover = null;
+				}
+			}
+			if (item != null && item != hover)
+			{
 				hover = item;
+				hover.handleEvent(EventType.EVT_MOUSE__ITEM_HOVERED_INIT, e);
 			}
 		}
 	}

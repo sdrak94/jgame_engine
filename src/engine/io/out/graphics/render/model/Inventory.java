@@ -17,10 +17,10 @@ public class Inventory extends RenderableItem
 	@Override
 	public void render(Graphics2D g, int locX, int locY)
 	{
-		g.setColor(Color.RED);
-		g.drawRect(locX, locY, _width, _heigh);
-		g.setColor(Color.BLUE);
-		g.fillRect(locX + 1, locY + 1, _width - 2, _heigh - 1);
+//		g.setColor(Color.RED);
+//		g.drawRect(locX, locY, _width, _heigh);
+//		g.setColor(Color.BLUE);
+//		g.fillRect(locX + 1, locY + 1, _width - 2, _heigh - 1);
 
 	}
 }

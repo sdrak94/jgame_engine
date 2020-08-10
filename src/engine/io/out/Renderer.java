@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.geom.AffineTransform;
@@ -14,11 +14,14 @@ import java.util.Iterator;
 import javax.swing.JPanel;
 
 import engine.io.out.graphics.render.RenderableItem;
-import engine.util.model.FPSCounter;
+import engine.model.geometry.GameRect;
+import engine.model.interfaces.IRenderable;
+import engine.util.model.FPSCounter2;
+import engine.util.model.IFPSCounter;
 
 public abstract class Renderer extends JPanel
 {
-	protected final Rectangle _renderRect;
+	protected final GameRect _renderRect = new GameRect();
 	
 //	protected int offsetX = 0;
 //	protected int offsetY = 0;
@@ -27,9 +30,7 @@ public abstract class Renderer extends JPanel
 	
 	private long t0;
 	
-	private final FPSCounter fpsCounter = new FPSCounter();
-	
-	private int viewZ = 1;
+	private final IFPSCounter fpsCounter = new FPSCounter2();
 	
 	private boolean _rendering;
 	
@@ -45,8 +46,6 @@ public abstract class Renderer extends JPanel
         setIgnoreRepaint(false);
         setDoubleBuffered(true);
 
-        _renderRect = new Rectangle();
-        
         this.addComponentListener(new RendererComponentListener());
 	}
 	
@@ -54,7 +53,7 @@ public abstract class Renderer extends JPanel
 	
 	public abstract void addRenderQueue(RenderableItem renderable);
 	
-	public abstract void rmRenderQueue(RenderableItem renderable);
+	public abstract void rmRenderQueue(IRenderable renderable);
 	
 	public abstract void clearRenderQueue();
 	
@@ -70,6 +69,8 @@ public abstract class Renderer extends JPanel
 		
 		while (_rendering)
 			render();
+		
+		_rendering = false;
 	}
 	
 	public final void render()
@@ -150,11 +151,11 @@ public abstract class Renderer extends JPanel
 			int height = 0;
 			
 			if (hasRenderHint(RenderHint.SHOW_X))
-				g.drawString("X: " + _renderRect.x, getWidth() - 40, height+=15);
-			if (hasRenderHint(RenderHint.SHOW_X))
-				g.drawString("Y: " + _renderRect.y, getWidth() - 40, height+=15);
-			if (hasRenderHint(RenderHint.SHOW_X))
-				g.drawString("Z: " + viewZ, getWidth() - 40, height+=15);
+				g.drawString("X: " + getRenderX(), getWidth() - 40, height+=15);
+			if (hasRenderHint(RenderHint.SHOW_Y))
+				g.drawString("Y: " + getRenderY(), getWidth() - 40, height+=15);
+			if (hasRenderHint(RenderHint.SHOW_Z))
+				g.drawString("Z: " + getRenderZ(), getWidth() - 40, height+=15);
 		}
 	}
 	
@@ -182,8 +183,10 @@ public abstract class Renderer extends JPanel
 	
 	public void clearGraphics(Graphics2D g)
 	{
-		_clearGraphics.setTransform(_clearGraphics);
+		g.setTransform(_clearGraphics);
 		g.setFont(null);
+
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	}
 	
 	public long getTPF()
@@ -201,43 +204,49 @@ public abstract class Renderer extends JPanel
 		return _rendering;
 	}
 	
-	public int getZ()
+	public void setRenderX(int x)
 	{
-		return viewZ;
+		_renderRect.setLocationX(x);
 	}
 	
-	public void setZ(int z)
+	public void setRenderY(int y)
 	{
-		viewZ = z;
+		_renderRect.setLocationY(y);
 	}
 	
-	public void incZ(int z)
+	public void setRenderZ(int z)
 	{
-		viewZ += z;
+		_renderRect.setLocationZ(z);
 	}
 	
-	public void setOffsetX(int x)
+	public void incRenderX(int x)
 	{
-//		offsetX = x;
-		_renderRect.x = x;
+		_renderRect.incX(x);
 	}
 	
-	public void incOffsetX(int x)
+	public void incRenderY(int y)
 	{
-//		offsetX += x;
-		_renderRect.x += x;
+		_renderRect.incY(y);
 	}
 	
-	
-	public void setOffsetY(int y)
+	public void incRenderZ(int z)
 	{
-//		offsetY = y;
-		_renderRect.y = y;
+		_renderRect.incZ(z);
 	}
 	
-	public void incOffsetY(int y)
+	public int getRenderX()
 	{
-		_renderRect.y += y;
+		return _renderRect.getLocationX();
+	}
+	
+	public int getRenderY()
+	{
+		return _renderRect.getLocationY();
+	}
+	
+	public int getRenderZ()
+	{
+		return _renderRect.getLocationZ();
 	}
 	
 	private class RendererComponentListener implements ComponentListener
@@ -252,8 +261,8 @@ public abstract class Renderer extends JPanel
         
         public void componentResized(ComponentEvent arg0)
         {
-        	_renderRect.width =  getWidth();
-        	_renderRect.height = getHeight();
+        	_renderRect.setSizeX(getWidth());
+        	_renderRect.setSizeY(getHeight());
         }
         
         public void componentShown(ComponentEvent arg0) 

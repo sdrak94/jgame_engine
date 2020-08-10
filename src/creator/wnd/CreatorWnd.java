@@ -16,15 +16,18 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+//import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import creator.model.JMenuList;
 import engine.io.out.Renderer;
 import engine.io.out.graphics.render.RenderableTile;
+import engine.io.out.graphics.render.model.RGrid;
+import engine.io.out.graphics.render.model.ui.RCheckBox;
 import engine.manager.PositionManager2D;
 import engine.model.Position2D;
+import engine.model.enums.ItemState;
 
 public class CreatorWnd extends JFrame
 {
@@ -32,6 +35,8 @@ public class CreatorWnd extends JFrame
 	
 	private final Renderer _mainRenderer;
 	private final Renderer _seleRenderer;
+	
+	private final RCheckBox rShowGrid;
 	
 	public CreatorWnd(Renderer viewRenderer, Renderer seleRenderer)
 	{
@@ -45,6 +50,19 @@ public class CreatorWnd extends JFrame
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		_mainRenderer.setSize(new Dimension(4024,4024));
+		
+		rShowGrid = new RCheckBox(false);
+		rShowGrid.setItemState(ItemState.SEALED, true);
+		rShowGrid.setText("Show Grid");
+		rShowGrid.setLocation(50, 5);
+		rShowGrid.setSizeX(100);
+		
+		_mainRenderer.addRenderQueue(rShowGrid);
+		
+		final RGrid rGrid = new RGrid(100, 100, TILE_CONST);
+		rGrid.setLocation(5, 50);
+		_mainRenderer.addRenderQueue(rGrid);
+		
 		
 		final JMenuBar menuBar = new JMenuBar();
 		
@@ -89,16 +107,16 @@ public class CreatorWnd extends JFrame
 		
 		RIGH.add(seleRenderer, BorderLayout.CENTER);
 		
-		final JScrollPane SCRL_SCREEN = new JScrollPane(viewRenderer, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		final JScrollPane SCRL_SELECT = new JScrollPane(RIGH, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+//		final JScrollPane SCRL_SCREEN = new JScrollPane(viewRenderer, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+//		final JScrollPane SCRL_SELECT = new JScrollPane(RIGH, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-		SCRL_SCREEN.setSize(new Dimension(10000,1000));
-		SCRL_SCREEN.setPreferredSize(new Dimension(1000,1000));
+//		SCRL_SCREEN.setSize(new Dimension(10000,1000));
+//		SCRL_SCREEN.setPreferredSize(new Dimension(1000,1000));
+//		
+//		SCRL_SELECT.setSize(new Dimension(1000,1000));
+//		SCRL_SELECT.setPreferredSize(new Dimension(1000,1000));
 		
-		SCRL_SELECT.setSize(new Dimension(1000,1000));
-		SCRL_SELECT.setPreferredSize(new Dimension(1000,1000));
-		
-		final JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SCRL_SCREEN, SCRL_SELECT);
+		final JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, viewRenderer, RIGH);
 		//splitPaneH.setEnabled(false);
 		splitPaneH.setDividerLocation(1025);
 		
@@ -189,8 +207,7 @@ public class CreatorWnd extends JFrame
 		final RenderableTile renderableItem = new RenderableTile(buffImg);
 		final Position2D pos2d = positionManager.getNext();
 		renderableItem.setLocation(pos2d.getX(), pos2d.getY());
-		_mainRenderer.addRenderQueue(renderableItem);
-		
+		_seleRenderer.addRenderQueue(renderableItem);
 	}
 	
 	private void onClose()

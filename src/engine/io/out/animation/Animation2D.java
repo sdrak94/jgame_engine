@@ -1,12 +1,12 @@
 package engine.io.out.animation;
 
-import engine.io.out.graphics.render.RenderableItem;
+import engine.model.interfaces.IRenderable;
 
 public class Animation2D implements Runnable
 {
-	private final RenderableItem _renderableItem;
+	private final IRenderable _renderableItem;
 	
-	public Animation2D(RenderableItem renderableItem)
+	public Animation2D(IRenderable renderableItem)
 	{
 		_renderableItem = renderableItem;
 	}

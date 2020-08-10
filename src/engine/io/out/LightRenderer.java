@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import engine.io.out.graphics.render.RenderableItem;
+import engine.model.interfaces.IRenderable;
 
 public class LightRenderer extends Renderer
 {
@@ -30,7 +31,7 @@ public class LightRenderer extends Renderer
 	}
 	
 	@Override
-	public void rmRenderQueue(RenderableItem renderable)
+	public void rmRenderQueue(IRenderable renderable)
 	{
 		renderQueue.remove(renderable);
 	}
@@ -61,7 +62,7 @@ public class LightRenderer extends Renderer
 	{
 		for (final RenderableItem renderable : renderQueue)
 		{
-			if (renderable.getZ() > getZ())
+			if (renderable.getLocationZ() > getRenderZ())
 				break;
 //			renderable.render(g);
 //			renderable.renderState(g);

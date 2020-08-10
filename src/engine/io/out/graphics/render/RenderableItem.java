@@ -1,47 +1,111 @@
 package engine.io.out.graphics.render;
 
+import java.awt.AWTEvent;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
 import java.util.EnumSet;
 
 import engine.model.enums.ItemState;
+import engine.model.event.enums.EventType;
+import engine.model.geometry.GameRect;
 import engine.model.interfaces.ILocationable;
+import engine.model.interfaces.IRenderable;
+import engine.model.interfaces.ISizeable;
 
-public abstract class RenderableItem implements ILocationable, Comparable<RenderableItem>
+public abstract class RenderableItem implements IRenderable, ILocationable, ISizeable, Comparable<RenderableItem>
 {
 	protected final static AlphaComposite CLEAR_ALPHA = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1);
 	
-	protected final EnumSet<ItemState> knownStates = EnumSet.of(ItemState.IDLE);
+	protected final EnumSet<ItemState> knownStates = EnumSet.of(ItemState.IDLE, ItemState.CLICKABLE, ItemState.MOVEABLE, ItemState.DEBUG_CLICKED, ItemState.DEBUG_HOVERED);
 	
-	protected int _locX;
-	protected int _locY;
-	protected int _locZ;
+	private final GameRect _renderRect = new GameRect();
 	
 	protected double _rotationRads;
 	
 	protected AlphaComposite _alpha;
 	
-	protected boolean clickable = true;
+//	protected boolean clickable = true;
 	
 	protected float _scaleX = 1f;
 	protected float _scaleY = 1f;
 
-	protected final int _width;
-	protected final int _heigh;
-	
 	public RenderableItem(int width, int heigh)
 	{
-		_width = width;
-		_heigh = heigh;
+		_renderRect.setSize(width, heigh);
 	}
 	
+	@Override
+	public void setLocationX(int x)
+	{
+		_renderRect.setLocationX(x);
+	}
+	
+	@Override
+	public void setLocationY(int y)
+	{
+		_renderRect.setLocationY(y);
+	}
+	
+	@Override
+	public void setLocationZ(int z)
+	{
+		_renderRect.setLocationZ(z);
+	}
+	
+	@Override
+	public int getLocationX()
+	{
+		return _renderRect.getLocationX();
+	}
+	
+	@Override
+	public int getLocationY()
+	{
+		return _renderRect.getLocationY();
+	}
+	
+	@Override
+	public int getLocationZ()
+	{
+		return _renderRect.getLocationZ();
+	}
+
+	@Override
+	public void setSizeX(int x)
+	{
+		_renderRect.setSizeX(x);
+	}
+
+	@Override
+	public void setSizeY(int y)
+	{
+		_renderRect.setSizeY(y);
+	}
+
+	@Override
+	public int getSizeX()
+	{
+		return 0;
+	}
+
+	@Override
+	public int getSizeY()
+	{
+		return 0;
+	}
+	
+	@Override
 	public final void renderInit(Graphics2D g, int offsetX, int offsetY)
 	{
-		final int currX = getX() - offsetX, currY = getY() - offsetY; 
+		if (getItemState(ItemState.SEALED))
+		{
+			offsetX = 0;
+			offsetY = 0;
+		}
+		
+		final int currX = getLocationX() - offsetX, currY = getLocationY() - offsetY; 
 		final float scaleX = getScaleX(), scaleY = getScaleY();
 
 		if (scaleX != 1f || scaleY != 1f)
@@ -68,153 +132,179 @@ public abstract class RenderableItem implements ILocationable, Comparable<Render
 		renderState(g, currX, currY);
 	}
 	
+	@Override
 	public void renderState(Graphics2D g, int currX, int currY)
 	{
-		if (knownStates.contains(ItemState.CLICKED))
+		final int width = _renderRect.getSizeX();
+		final int heigh = _renderRect.getSizeY();
+		
+		if (getItemState(ItemState.CLICKED, ItemState.DEBUG_CLICKED))
 		{
 			g.setColor(new Color(255,255,255,160));
-			g.fillRect(currX + _width, currY, 34, 20);
+			g.fillRect(currX + width, currY, 34, 20);
 			g.setColor(Color.RED);
-			g.drawRect(currX, currY, _width - 1, _heigh - 1);
+			g.drawRect(currX, currY, width - 1, heigh - 1);
 			g.setColor(new Color(255, 0, 0, 120));
-			g.drawRect(currX + _width - 1, currY, 34, 20);
-			g.drawLine(currX, currY, currX + _width - 1, _heigh + currY - 1);
-			g.drawLine(currX + _width, currY, currX, currY + _heigh);
+			g.drawRect(currX + width - 1, currY, 34, 20);
+			g.drawLine(currX, currY, currX + width - 1, heigh + currY - 1);
+			g.drawLine(currX + width, currY, currX, currY + heigh);
 			g.setColor(new Color(255, 0, 0, 30));
-			g.fillRect(currX, currY, _width, _heigh);
+			g.fillRect(currX, currY, width, heigh);
 			
 			
 			g.setColor(Color.BLACK);
 			g.setFont(new Font("Calibri", 5, 15));
-			g.drawString("Z: " + getZ(), currX + _width, currY + 15);
+			g.drawString("Z: " + getLocationZ(), currX + width, currY + 15);
+		}
+		
+		else if (getItemState(ItemState.HOVERED, ItemState.DEBUG_HOVERED))
+		{
+			g.setColor(new Color(255, 0, 0, 50));
+			g.fillRect(currX, currY, width, heigh);
 		}
 	}
 	
-	public abstract void render(Graphics2D g, int locX, int locY);
+//	public void setLocation(int x, int y, int z)
+//	{
+//		_locX = x;
+//		_locY = y;
+//		_locZ = z;
+//	}
+//	
+//	public void setLocation(int x, int y)
+//	{	
+//		_locX = x;
+//		_locY = y;
+//	}
+//	
+//	public void setX(int locX)
+//	{
+//		_locX = locX;
+//	}
+//	
+//	public void setY(int locY)
+//	{
+//		_locY = locY;
+//	}
+//	
+//	public void setZ(int locZ)
+//	{
+//		_locZ = locZ;
+//	}
 	
-	public void setLocation(int x, int y, int z)
-	{
-		_locX = x;
-		_locY = y;
-		_locZ = z;
-	}
-	
-	public void setLocation(int x, int y)
-	{	
-		_locX = x;
-		_locY = y;
-	}
-	
-	public void setX(int locX)
-	{
-		_locX = locX;
-	}
-	
-	public void setY(int locY)
-	{
-		_locY = locY;
-	}
-	
-	public void setZ(int locZ)
-	{
-		_locZ = locZ;
-	}
-	
+	@Override
 	public void setAlpha(float alpha)
 	{
 		_alpha =alpha > .99 ? null : AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
 	}
 	
+	@Override
 	public void setScale(float scaleX, float scaleY)
 	{
 		_scaleX = scaleX;
 		_scaleY = scaleY;
 	}
 	
+	@Override
 	public void incScale(float scale)
 	{
 		_scaleX += scale;
 		_scaleY += scale;
 	}
 	
+	@Override
 	public void setScaleX(float scaleX)
 	{
 		_scaleX = scaleX;
 	}
 	
+	@Override
 	public void setScaleY(float scaleY)
 	{
 		_scaleY = scaleY;
 	}
 	
+	@Override
 	public void setRotationDegrees(double rotationDegrees)
 	{
 		_rotationRads = Math.toRadians(rotationDegrees);
 	}
 	
+	@Override
 	public void incRotation(double inc)
 	{
 		_rotationRads += Math.toRadians(inc);
 	}
 	
+	@Override
 	public double getRotationDegrees()
 	{
 		return Math.toDegrees(_rotationRads);
 	}
 	
+	@Override
 	public float getScaleX()
 	{
-		return knownStates.contains(ItemState.HOVER) ? _scaleX + .3f : _scaleX;
+		return _scaleX;
 	}
 	
+	@Override
 	public float getScaleY()
 	{
-		return knownStates.contains(ItemState.HOVER) ? _scaleY + .3f : _scaleY;
+		return _scaleY;
 	}
 	
-	public int getX()
-	{
-		return _locX;
-	}
+//	public int getX()
+//	{
+//		return _locX;
+//	}
+//	
+//	public int getY()
+//	{
+//		return _locY;
+//	}
+//	
+//	public int getZ()
+//	{
+//		return _locZ;
+//	}
+//	
+//	public int getWidth()
+//	{
+//		return (int) (_width * _scaleX);
+//	}
+//	
+//	public int getHeight()
+//	{
+//		return (int) (_heigh * _scaleY);
+//	}
 	
-	public int getY()
-	{
-		return _locY;
-	}
-	
-	public int getZ()
-	{
-		return _locZ;
-	}
-	
-	public int getWidth()
-	{
-		return (int) (_width * _scaleX);
-	}
-	
-	public int getHeight()
-	{
-		return (int) (_heigh * _scaleY);
-	}
-	
+	@Override
 	public boolean contains(int x, int y)
 	{
-		final Rectangle r = new Rectangle(_locX, _locY, getWidth(), getHeight());
-		return r.contains(x, y);
+		return _renderRect.contains(x, y);
 	}
 	
-	public void translate(int x, int y)
+//	public void translate(int x, int y)
+//	{
+////		final Rectangle r = new Rectangle(_locX, _locY, getWidth(), getHeight());
+//		r.translate(x, y);
+//		setLocation((int)r.getX(), (int)r.getY());
+//	}
+	
+
+	@Override
+	public boolean getItemState(ItemState ... newStates)
 	{
-		final Rectangle r = new Rectangle(_locX, _locY, getWidth(), getHeight());
-		r.translate(x, y);
-		setLocation((int)r.getX(), (int)r.getY());
+//		boolean containsAll = false;
+		for (final ItemState newState : newStates)
+			if (!knownStates.contains(newState))
+				return false;
+		return true;
+//		return knownStates.contains(newState);
 	}
 	
-	public Rectangle toRectangle()
-	{
-		return new Rectangle(_locX, _locY, getWidth(), getHeight());	
-	}
-	
+//	@Override
 	public void setItemState(ItemState newState, boolean set)
 	{
 		if (set)
@@ -223,26 +313,28 @@ public abstract class RenderableItem implements ILocationable, Comparable<Render
 			knownStates.remove(newState);
 	}
 	
-	public void setClickable(boolean bool)
-	{
-		clickable = bool;
-	}
-	
-	public boolean isClickable()
-	{
-		return clickable;
-	}
+//	@Override
+//	public void setClickable(boolean bool)
+//	{
+//		clickable = bool;
+//	}
+//	
+//	@Override
+//	public boolean isClickable()
+//	{
+//		return clickable;
+//	}
 	
 	@Override
 	public int compareTo(RenderableItem rend2)
 	{
-		return getZ() - rend2.getZ();
+		return getLocationZ() - rend2.getLocationZ();
 	}
 	
 	@Override
 	public String toString()
 	{
-		return getClass().getSimpleName() + ",x=" + getX() + ",y=" + getY() + ",z=" + getZ();
+		return getClass().getSimpleName() + ",x=" + getLocationX() + ",y=" + getLocationY() + ",z=" + getLocationZ();
 	}
 //	
 //	public boolean isRenderable(int offsetX, int offsetY)
@@ -250,10 +342,34 @@ public abstract class RenderableItem implements ILocationable, Comparable<Render
 //		return _locX + _heigh > offsetX && _locY + _width > offsetY;
 //	}
 	
-	public boolean isRenderable(final Rectangle screenRectangle)
+	@Override
+	public boolean isRenderable(final GameRect renderRect)
 	{
-		final Rectangle r = new Rectangle(_locX, _locY, getWidth(), getHeight());
-		return r.intersects(screenRectangle);
-//		return _locX + _heigh > offsetX && _locY + _width > offsetY;
+		if (getItemState(ItemState.SEALED))
+			return true;
+		if (_renderRect.getLocationZ() <= renderRect.getLocationZ())
+			return _renderRect.intersects(renderRect);
+		return false;
 	}
+	
+	@Override
+	public void handleEvent(final EventType eventType, final AWTEvent awtEvent)
+	{
+		System.out.println(toString() + eventType);
+		
+		switch (eventType)
+		{
+
+			case EVT_MOUSE__ITEM_HOVERED:
+				break;
+			case EVT_MOUSE__ITEM_HOVERED_INIT:
+				setItemState(ItemState.HOVERED, true);
+				break;
+			case EVT_MOUSE__ITEM_HOVERED_END:
+				setItemState(ItemState.HOVERED, false);
+				break;
+		
+		}
+	}
+	
 }

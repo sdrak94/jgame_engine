@@ -15,6 +15,7 @@ public class GameWnd extends JFrame
 //		setSize(768, 640);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setMaximumSize(new Dimension(3000,3000));
+		this.setUndecorated(true);
 //		this.setUndecorated(true);
 	}
 	

@@ -6,7 +6,6 @@ import java.awt.image.BufferedImage;
 //import java.util.concurrent.ScheduledFuture;
 
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 
 import engine.data.AnimatedTileTable;
 import engine.data.TileTable;
@@ -19,6 +18,8 @@ import engine.io.out.graphics.render.RenderableAnimation;
 import engine.io.out.graphics.render.RenderableTile;
 import engine.manager.DelayManager;
 import engine.model.character.Player;
+import engine.model.control.Joystick2D;
+import engine.model.enums.ItemState;
 import engine.template.character.CharacterTemplate;
 import engine.util.Rnd;
 
@@ -49,9 +50,9 @@ public class GameInit
 		
 		final BufferedImage buffImg = TileTable.getInstance().getImage("AzureTown.png");
 		final RenderableTile map = new RenderableTile(buffImg);
-		map.setZ(-10);
+		map.setLocationZ(-10);
 		map.setAlpha(1f);
-		map.setClickable(false);
+		map.setItemState(ItemState.CLICKABLE, false);
 		screen.addRenderQueue(map);
 		
 		gWnd.setSize(new Dimension(1600, 900));
@@ -71,18 +72,22 @@ public class GameInit
 		
 		//gWnd.addKeyListener(keyIn);
 		
-		int loops = 20000;
+		int loops = 5;
 		while (loops-->0)
 		{
 			final Player cha = new Player(new CharacterTemplate("bugcatcher"));
 			cha.setLocation(Rnd.get(0, 1000), Rnd.get(0, 1000), 5);
 			screen.addRenderQueue(cha);
+			
+			DelayManager.getInstance().addQueueAtFixedRate(() ->
+			{
+				cha.rndAnime();
+			}, 500, 400);
 		}
 		
-//		DelayManager.getInstance().addQueueAtFixedRate(() ->
-//		{
-//			cha.rndAnime();
-//		}, 500, 400);
+		final Joystick2D vJoystick = new Joystick2D(50);
+		vJoystick.setLocation(10, 10);
+		screen.addRenderQueue(vJoystick);
 		
 		
 //		final ScheduledFuture<?> test = DelayManager.getInstance().addQueueAtFixedRate(() ->

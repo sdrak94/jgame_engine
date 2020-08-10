@@ -45,21 +45,23 @@ public class ProgressBar extends RenderableItem
 	@Override
 	public void render(Graphics2D g, int locX, int locY)
 	{
-		final float lambda = 1 - getLambda();
-		if (lambda > 0)
-		{
-			final int lambdPerc = (int) (lambda * _width);
-			g.setColor(new Color(255, 0, 0));
-			g.fillRect(_locX + lambdPerc, _locY, _width - lambdPerc, _heigh);
-			g.setColor(Color.GREEN);
-			g.fillRect(_locX, _locY, lambdPerc, _heigh);
-		}
-		else
-		{
-			g.setColor(Color.RED);
-			g.fillRect(_locX, _locY, _width, _heigh);
-		}
-		g.setColor(Color.BLACK);
-		g.drawRect(_locX, _locY, _width, _heigh);
+//		final int locX = getLocationX();
+//		
+//		final float lambda = 1 - getLambda();
+//		if (lambda > 0)
+//		{
+//			final int lambdPerc = (int) (lambda * _width);
+//			g.setColor(new Color(255, 0, 0));
+//			g.fillRect(_locX + lambdPerc, _locY, _width - lambdPerc, _heigh);
+//			g.setColor(Color.GREEN);
+//			g.fillRect(_locX, _locY, lambdPerc, _heigh);
+//		}
+//		else
+//		{
+//			g.setColor(Color.RED);
+//			g.fillRect(_locX, _locY, _width, _heigh);
+//		}
+//		g.setColor(Color.BLACK);
+//		g.drawRect(_locX, _locY, _width, _heigh);
 	}
 }

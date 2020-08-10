@@ -8,7 +8,7 @@ import engine.gui.misc.BattleInterface;
 import engine.gui.misc.Pokebar;
 import engine.manager.DelayManager;
 import engine.model.TileGroup;
-import engine.model.engine.animation.MultiAnimation;
+import engine.model.animation.MultiAnimation;
 import engine.model.enums.Heading;
 
 public class BattleWnd extends Wnd
